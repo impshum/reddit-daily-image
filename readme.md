@@ -2,6 +2,8 @@
 
 A scheduled script to upload images to Reddit using the filename as the title (set and forget).
 
+![](r.jpg)
+
 ### Instructions
 
 -   Install requirements `pip install -r requirements.txt`
