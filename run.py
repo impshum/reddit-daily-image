@@ -1,6 +1,5 @@
 import os
 import praw
-import pyimgur
 import schedule
 from time import sleep
 from random import choice
@@ -14,7 +13,6 @@ reddit_pass = config['REDDIT']['reddit_pass']
 reddit_client_id = config['REDDIT']['reddit_client_id']
 reddit_client_secret = config['REDDIT']['reddit_client_secret']
 reddit_target_subreddit = config['REDDIT']['reddit_target_subreddit']
-imgurid = config['IMGUR']['imgurid']
 post_time = config['SETTINGS']['post_time']
 
 
@@ -23,21 +21,13 @@ reddit = praw.Reddit(
     password=reddit_pass,
     client_id=reddit_client_id,
     client_secret=reddit_client_secret,
-    user_agent='Something (by u/impshum)'
+    user_agent='Reddit Daily Image (by u/impshum)'
 )
 
+sub = reddit.subreddit(target_subreddit)
 
 in_dir = 'data/in/'
 out_dir = 'data/out/'
-
-reddit = praw.Reddit(client_id=client_id,
-                     client_secret=client_secret,
-                     username=reddit_user,
-                     password=reddit_pass,
-                     user_agent='Daily image (by u/impshum)')
-
-sub = reddit.subreddit(target_subreddit)
-imgur = pyimgur.Imgur(imgurid)
 
 x = 0
 
@@ -57,7 +47,6 @@ def main():
         os.rename(file_path_in, file_path_out)
         title = os.path.splitext(random_image)
         title = title[0].replace('_', ' ')
-        upload_image = imgur.upload_image(file_path_out, title=title)
         sub.submit(title, url=upload_image.link)
         print(f'{all_images} images remaining')
     else:
