@@ -1,9 +1,15 @@
 import os
 import praw
 import schedule
-from time import sleep
-from random import choice
+import random
+import time
 import configparser
+import threading
+
+try:
+    import queue
+except ImportError:
+    import Queue as queue
 
 
 config = configparser.ConfigParser()
@@ -15,6 +21,14 @@ reddit_client_secret = config['REDDIT']['reddit_client_secret']
 reddit_target_subreddit = config['REDDIT']['reddit_target_subreddit']
 post_time = config['SETTINGS']['post_time']
 
+image_in_dir = 'images/'
+stopper = 0
+
+
+def set_stopper():
+    global stopper
+    stopper = 1
+
 
 reddit = praw.Reddit(
     username=reddit_user,
@@ -24,45 +38,59 @@ reddit = praw.Reddit(
     user_agent='Reddit Daily Image (by u/impshum)'
 )
 
-sub = reddit.subreddit(target_subreddit)
-
-in_dir = 'data/in/'
-out_dir = 'data/out/'
-
-x = 0
+reddit.validate_on_submit = True
 
 
-def set():
-    global x
-    x = 1
+def get_random_image(dir):
+    images = [x for x in os.listdir(dir) if x.endswith(
+        ('jpg', 'jpeg', 'png', 'gif'))]
+
+    if not images:
+        set_stopper()
+        print('No images')
+        return
+
+    image = random.choice(images)
+    title = os.path.splitext(image)[0].replace('_', ' ')
+    return {'image': image, 'title': title}
+
+
+def runner():
+    while 1:
+        job_func = jobqueue.get()
+        job_func()
+        jobqueue.task_done()
+        if stopper:
+            break
 
 
 def main():
-    dir = os.listdir(in_dir)
-    all_images = len(dir)
-    if all_images > 0:
-        random_image = choice(dir)
-        file_path_in = f'{in_dir}{random_image}'
-        file_path_out = f'{out_dir}{random_image}'
-        os.rename(file_path_in, file_path_out)
-        title = os.path.splitext(random_image)
-        title = title[0].replace('_', ' ')
-        sub.submit(title, url=upload_image.link)
-        print(f'{all_images} images remaining')
-    else:
-        set()
+    random_image = get_random_image(image_in_dir)
+    if random_image:
+        title = random_image['title']
+        image = os.path.abspath(image_in_dir + random_image['image'])
+        reddit.subreddit(reddit_target_subreddit).submit_image(title, image)
+        os.remove(image)
+        print(title)
 
 
-# schedule.every(1).seconds.do(main)
-# schedule.every(10).minutes.do(main)
-# schedule.every().hour.do(main)
-schedule.every().day.at(post_time).do(main)
-# schedule.every().monday.do(main)
-# schedule.every().wednesday.at(post_time).do(main)
+jobqueue = queue.Queue()
+
+# schedule options
+# schedule.every(10).seconds.do(jobqueue.put, main)
+# schedule.every(3).minutes.do(jobqueue.put, main)
+# schedule.every().hour.do(jobqueue.put, main)
+# schedule.every().monday.do(jobqueue.put, main)
+
+schedule.every().day.at(post_time).do(jobqueue.put, main)
+
+worker_thread = threading.Thread(target=runner)
+worker_thread.start()
+
 
 while True:
     schedule.run_pending()
-    sleep(1)
-    if x:
-        print('No images')
+    time.sleep(1)
+    if stopper:
+        worker_thread.join()
         break
