@@ -1,4 +1,4 @@
-## Reddit Daily Image
+## Reddit Daily Image Bot (v3)
 
 A scheduled script to upload images to Reddit using the filename as the title (set and forget).
 
