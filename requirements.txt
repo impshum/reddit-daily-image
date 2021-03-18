@@ -1,4 +1,4 @@
 praw
 configparser
-pyimgur
+threading
 schedule
