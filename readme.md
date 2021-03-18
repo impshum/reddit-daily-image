@@ -16,5 +16,5 @@ A scheduled script to upload images to Reddit using the filename as the title (s
 ### Notes
 
 -   Images will be deleted after posting. You have been warned!
--   If you want to change the schedule, to something other than daily, have a look at the bottom of run.py (default - Daily)
+-   If you want to change the schedule, to something other than daily, have a look at the bottom of run.py.
 -   I will not be held responsible for any bad things that might happen to you or your Reddit account whilst using this bot. Follow Reddiquette and stay safe.
