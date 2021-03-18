@@ -42,8 +42,7 @@ reddit.validate_on_submit = True
 
 
 def get_random_image(dir):
-    images = [x for x in os.listdir(dir) if x.endswith(
-        ('jpg', 'jpeg', 'png', 'gif'))]
+    images = [x for x in os.listdir(dir) if x.endswith(('jpg', 'jpeg', 'png', 'gif'))]
 
     if not images:
         set_stopper()
