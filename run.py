@@ -25,11 +25,6 @@ image_in_dir = 'images/'
 stopper = 0
 
 
-def set_stopper():
-    global stopper
-    stopper = 1
-
-
 reddit = praw.Reddit(
     username=reddit_user,
     password=reddit_pass,
@@ -41,8 +36,14 @@ reddit = praw.Reddit(
 reddit.validate_on_submit = True
 
 
+def set_stopper():
+    global stopper
+    stopper = 1
+
+
 def get_random_image(dir):
-    images = [x for x in os.listdir(dir) if x.endswith(('jpg', 'jpeg', 'png', 'gif'))]
+    images = [x for x in os.listdir(dir) if x.endswith(
+        ('jpg', 'jpeg', 'png', 'gif'))]
 
     if not images:
         set_stopper()
@@ -73,23 +74,27 @@ def main():
         print(title)
 
 
-jobqueue = queue.Queue()
+def main():
+    jobqueue = queue.Queue()
 
-# schedule options
-# schedule.every(10).seconds.do(jobqueue.put, main)
-# schedule.every(3).minutes.do(jobqueue.put, main)
-# schedule.every().hour.do(jobqueue.put, main)
-# schedule.every().monday.do(jobqueue.put, main)
+    # schedule options
+    # schedule.every(10).seconds.do(jobqueue.put, main)
+    # schedule.every(3).minutes.do(jobqueue.put, main)
+    # schedule.every().hour.do(jobqueue.put, main)
+    # schedule.every().monday.do(jobqueue.put, main)
 
-schedule.every().day.at(post_time).do(jobqueue.put, main)
+    schedule.every().day.at(post_time).do(jobqueue.put, main)
 
-worker_thread = threading.Thread(target=runner)
-worker_thread.start()
+    worker_thread = threading.Thread(target=runner)
+    worker_thread.start()
+
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+        if stopper:
+            worker_thread.join()
+            break
 
 
-while True:
-    schedule.run_pending()
-    time.sleep(1)
-    if stopper:
-        worker_thread.join()
-        break
+if __name__ == '__main__':
+    main()
