@@ -73,28 +73,22 @@ def main():
         os.remove(image)
         print(title)
 
+jobqueue = queue.Queue()
 
-def main():
-    jobqueue = queue.Queue()
+# schedule options
+# schedule.every(10).seconds.do(jobqueue.put, main)
+# schedule.every(3).minutes.do(jobqueue.put, main)
+# schedule.every().hour.do(jobqueue.put, main)
+# schedule.every().monday.do(jobqueue.put, main)
 
-    # schedule options
-    # schedule.every(10).seconds.do(jobqueue.put, main)
-    # schedule.every(3).minutes.do(jobqueue.put, main)
-    # schedule.every().hour.do(jobqueue.put, main)
-    # schedule.every().monday.do(jobqueue.put, main)
+schedule.every().day.at(post_time).do(jobqueue.put, main)
 
-    schedule.every().day.at(post_time).do(jobqueue.put, main)
+worker_thread = threading.Thread(target=runner)
+worker_thread.start()
 
-    worker_thread = threading.Thread(target=runner)
-    worker_thread.start()
-
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
-        if stopper:
-            worker_thread.join()
-            break
-
-
-if __name__ == '__main__':
-    main()
+while True:
+    schedule.run_pending()
+    time.sleep(1)
+    if stopper:
+        worker_thread.join()
+        break
